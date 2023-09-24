@@ -50,3 +50,13 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# Keil
+*.bak
+*.Phuc
+*.axf
+*.lnp
+#*.map
+*.dep
+*.d
+*.lst
