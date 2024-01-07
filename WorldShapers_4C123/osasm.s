@@ -33,6 +33,7 @@ SysTick_Handler                ; 1) Saves R0-R3,R12,LR,PC,PSR
     LDR     R1, [R0]           ; 6) R1 = RunPt, new thread
     LDR     SP, [R1]           ; 7) new thread SP; SP = RunPt->sp;
     POP     {R4-R11}           ; 8) restore regs r4-11
+    CPSIE   I                  ; 9) tasks run with interrupts enabled
     BX      LR                 ; 10) restore R0-R3,R12,LR,PC,PSR
 
 StartOS

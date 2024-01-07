@@ -153,38 +153,6 @@
         <Bp>
           <Number>0</Number>
           <Type>0</Type>
-          <LineNumber>391</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>9334</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>.\WorldShapers.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\WorldShapers\WorldShapers.c\391</Expression>
-        </Bp>
-        <Bp>
-          <Number>1</Number>
-          <Type>0</Type>
-          <LineNumber>1553</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>2746</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>..\inc\BSP.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\WorldShapers\../inc/BSP.c\1553</Expression>
-        </Bp>
-        <Bp>
-          <Number>2</Number>
-          <Type>0</Type>
           <LineNumber>1568</LineNumber>
           <EnabledFlag>1</EnabledFlag>
           <Address>0</Address>
