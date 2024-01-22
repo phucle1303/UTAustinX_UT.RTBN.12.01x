@@ -173,7 +173,7 @@ void DisplayDirectory(uint8_t index){
   }
 }
 
-int main(void){
+int main222(void){
   uint8_t m, n, p;              // file numbers
   uint8_t index = 0;            // row index
   volatile int i;
@@ -263,4 +263,26 @@ int main(void){
     }
     while((BSP_Button1_Input() == 0) || (BSP_Button2_Input() == 0)){};
   }
+}
+
+int main(void){
+  eDisk_Init(0);
+  testbuildbuff("buf3 buf4 buf5");
+  // eDisk_Format();
+  eDisk_WriteSector(Buff,0); // Put a breakpoint here an observe values from previous call
+  eDisk_ReadSector(Buff,255);  // Put a breakpoint here and observe values from previous call
+  return 0;  // Put a breakpoint here and observe values from previous call
+}
+
+int main333(void){
+   uint8_t result;
+  //testbuildbuff("buf0 buf1 buf2");
+  OS_File_Format();
+  MountDirectory(); // Put a breakpoint here an observe result from previous call.
+                   //Memory window starting 0x00020000 (all 0xFF)
+  result=OS_File_New(); // Put a breakpoint here and observe values from previous call.
+                        // In Watch window: Directory and FAT with all entries equal to 255,
+                        // because disk is empty
+  return 0;      // Put a breakpoint here and observe values from previous call.
+                 //In Watch window: result should be 0, because is the first file.
 }
