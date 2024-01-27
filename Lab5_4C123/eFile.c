@@ -160,6 +160,7 @@ uint8_t OS_File_Append(uint8_t num, uint8_t buf[512]){
   {
     MountDirectory();
   }
+  enum DRESULT writeRes;
   uint8_t retVal, freeSector = findfreesector();
   if (freeSector == 255)
   {
@@ -167,7 +168,11 @@ uint8_t OS_File_Append(uint8_t num, uint8_t buf[512]){
   }
   else
   {
-    (void)eDisk_WriteSector(buf, freeSector);
+    writeRes = eDisk_WriteSector(buf, freeSector);
+    if (writeRes != RES_OK)
+    {
+      retVal = 255;
+    }
     (void)appendfat(num, freeSector);
     retVal = 0;
   }
@@ -188,20 +193,30 @@ uint8_t OS_File_Read(uint8_t num, uint8_t location,
   {
     MountDirectory();
   }
-  uint8_t retVal;
+  uint8_t retVal = 0;
+  uint8_t m, count;
   uint8_t i = Directory[num];
-  uint8_t m;
-  if (i == 255)
+  enum DRESULT readRes;
+  if ((i == 255) || ((location+1) > OS_File_Size(num)))
   {
     retVal = 255;
   }
-  m = FAT[i];
-  while (m != 255)
+  else
   {
-    i=m;
     m = FAT[i];
+    count = 0;
+    while (count != location)
+    {
+      i = m;
+      m = FAT[i];
+      count++;
+    }
+    readRes = eDisk_ReadSector(buf, i);
+    if (readRes != RES_OK)
+    {
+      retVal = 255;
+    }
   }
-  eDisk_ReadSector(buf,m);
   return retVal; // replace this line
 }
 
