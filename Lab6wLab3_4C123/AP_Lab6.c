@@ -60,8 +60,24 @@ extern NotifyCharacteristic_t NotifyCharacteristicList[];
 // Outputs: none
 void SetFCS(uint8_t *msg){
 //****You implement this function as part of Lab 6*****
-
-  
+  uint8_t fcs = 0;
+  uint32_t size=AP_GetSize(msg);
+  msg++; //skip the SOF
+  fcs=fcs^(*msg);  // LSB length
+  msg++;
+  fcs=fcs^(*msg);  // MSB length
+  msg++;
+  fcs=fcs^(*msg);  // CMD0
+  msg++;
+  fcs=fcs^(*msg);  // CMD1
+  msg++;
+  // calculate fcs for payload
+  for(int i=0;i<size;i++)
+  {
+    fcs=fcs^(*msg); 
+    msg++; // payload
+  }
+  *msg = fcs;
 }
 //*************BuildGetStatusMsg**************
 // Create a Get Status message, used in Lab 6
@@ -71,8 +87,9 @@ void SetFCS(uint8_t *msg){
 void BuildGetStatusMsg(uint8_t *msg){
 // hint: see NPI_GetStatus in AP.c
 //****You implement this function as part of Lab 6*****
-
-  
+  uint8_t NPI_GetStatus[6] =   {SOF,0x00,0x00,0x55,0x06,0x00};
+  SetFCS(NPI_GetStatus);
+  msg = NPI_GetStatus;
 }
 //*************Lab6_GetStatus**************
 // Get status of connection, used in Lab 6
@@ -97,8 +114,9 @@ uint32_t Lab6_GetStatus(void){volatile int r; uint8_t sendMsg[8];
 void BuildGetVersionMsg(uint8_t *msg){
 // hint: see NPI_GetVersion in AP.c
 //****You implement this function as part of Lab 6*****
-  
-  
+  uint8_t NPI_GetVersion[6] =  {SOF,0x00,0x00,0x35,0x03,0x00};
+  SetFCS(NPI_GetVersion);
+  msg = NPI_GetVersion;
 }
 //*************Lab6_GetVersion**************
 // Get version of the SNP application running on the CC2650, used in Lab 6
@@ -119,8 +137,18 @@ uint32_t Lab6_GetVersion(void){volatile int r;uint8_t sendMsg[8];
 // build the necessary NPI message that will add a service
 void BuildAddServiceMsg(uint16_t uuid, uint8_t *msg){
 //****You implement this function as part of Lab 6*****
-  
-  
+  uint8_t NPI_AddService[8] = 
+  {
+  SOF,3,0x00,     // length = 3
+  0x35,0x81,      // SNP Add Service
+  0x01,           // Primary Service
+  0x00,0x00,
+  0x00            // FCS
+  };
+  NPI_AddService[6] = uuid&0xFF;
+  NPI_AddService[7] = uuid>>8;
+  SetFCS(NPI_AddService);
+  msg = NPI_AddService;
 }
 //*************Lab6_AddService**************
 // Add a service, used in Lab 6
@@ -140,8 +168,14 @@ int Lab6_AddService(uint16_t uuid){ int r; uint8_t sendMsg[12];
 // build the necessary NPI message that will register a service
 void BuildRegisterServiceMsg(uint8_t *msg){
 //****You implement this function as part of Lab 6*****
-  
-  
+  uint8_t NPI_Register[5] = 
+  {   
+  SOF,0x00,0x00,  // length = 0
+  0x35,0x84,      // SNP Register Service
+  0x00            // FCS
+  };
+  SetFCS(NPI_Register);
+  msg = NPI_Register;
 }
 //*************Lab6_RegisterService**************
 // Register a service, used in Lab 6
@@ -170,8 +204,23 @@ void BuildAddCharValueMsg(uint16_t uuid,
 // for a hint see NPI_AddCharValue in AP.c
 // for a hint see first half of AP_AddCharacteristic and first half of AP_AddNotifyCharacteristic
 //****You implement this function as part of Lab 6*****
-  
-    
+  uint8_t NPI_AddCharValue[14] = 
+  {   
+  SOF,0x08,0x00,  // length = 8
+  0x35,0x82,      // SNP Add Characteristic Value Declaration
+  0x00,           // 0=none,1=read,2=write, 3=Read+write, GATT Permission
+  0x00,0x00,      // 2=read,8=write,0x0A=read+write,0x10=notify, GATT Properties
+  0x00,           // RFU
+  0x00,0x02,      // Maximum length of the attribute value=512
+  0x00,0x00,      // UUID
+  0x00            // FCS
+  };
+  NPI_AddCharValue[5] = permission; // 0=none,1=read,2=write, 3=Read+write, GATT Permission
+  NPI_AddCharValue[6] = properties; // 2=read,8=write,0x0A=read+write,0x10=notify, GATT Properties
+  NPI_AddCharValue[11] = 0xFF&uuid; //uuid
+  NPI_AddCharValue[12] = uuid>>8;   //uuid
+  SetFCS(NPI_AddCharValue);  //FCS
+  msg = NPI_AddCharValue;
 }
 
 //*************BuildAddCharDescriptorMsg**************
@@ -186,8 +235,31 @@ void BuildAddCharDescriptorMsg(char name[], uint8_t *msg){
 // for a hint see NPI_AddCharDescriptor in AP.c
 // for a hint see second half of AP_AddCharacteristic
 //****You implement this function as part of Lab 6*****
-  
-  
+  uint8_t NPI_AddCharDescriptor[] = {   
+  SOF,0x17,0x00,  // length determined at run time 6+string length
+  0x35,0x83,      // SNP Add Characteristic Descriptor Declaration
+  0x80,           // User Description String
+  0x01,           // GATT Read Permissions
+  0x14,0x00,      // Maximum Possible length of the user description string
+  0x14,0x00,      // Initial length of the user description string
+  'C','h','a','r','a','c','t','e','r','i','s','t','i','c',' ','0',0, // Initial user description string
+  0x00,0,0,0      // FCS
+  }; 
+  uint8_t i = 0;
+  while((i<20)&&(name[i]))
+  {
+    NPI_AddCharDescriptor[11+i] = name[i]; 
+    i++;
+  }
+  NPI_AddCharDescriptor[11+i] = 0; 
+  i++;
+  NPI_AddCharDescriptor[1] = 6+i;  // frame length
+  NPI_AddCharDescriptor[5] = 0x80; // User Description String
+  NPI_AddCharDescriptor[6] = 0x01; // GATT Read Permissions
+  NPI_AddCharDescriptor[7] = NPI_AddCharDescriptor[9] = i;  // string length
+  NPI_AddCharDescriptor[8] = NPI_AddCharDescriptor[10] = 0; // string length
+  SetFCS(NPI_AddCharDescriptor);  // FCS
+  msg = NPI_AddCharDescriptor;
 }
 
 //*************Lab6_AddCharacteristic**************
@@ -243,8 +315,33 @@ void BuildAddNotifyCharDescriptorMsg(char name[], uint8_t *msg){
 // for a hint see NPI_AddCharDescriptor4 in VerySimpleApplicationProcessor.c
 // for a hint see second half of AP_AddNotifyCharacteristic
 //****You implement this function as part of Lab 6*****
-  
-  
+  uint8_t NPI_AddCharDescriptor4[] = 
+  {   
+  SOF,12,0x00,    // length = 12
+  0x35,0x83,      // SNP Add Characteristic Descriptor Declaration
+  0x84,           // User Description String+CCCD
+  0x03,           // CCCD parameters read+write
+  0x01,           // GATT Read Permissions
+  0x14,0x00,      // Maximum Possible length of the user description string
+  0x14,0x00,      // Initial length of the user description string
+  'C','o','u','n','t',0, // Initial user description string
+  0x00};          // FCS
+  uint8_t i = 0;
+  while((i<20)&&(name[i]))
+  {
+    NPI_AddCharDescriptor4[12+i] = name[i]; 
+    i++;
+  }
+  NPI_AddCharDescriptor4[12+i] = 0; 
+  i++;
+  NPI_AddCharDescriptor4[1] = 7+i;  // frame length
+  NPI_AddCharDescriptor4[5] = 0x84; // User Description String
+  NPI_AddCharDescriptor4[6] = 0x03, // CCCD parameters read+write
+  NPI_AddCharDescriptor4[7] = 0x01; // GATT Read Permissions
+  NPI_AddCharDescriptor[8] = NPI_AddCharDescriptor[10] = i;  // string length
+  NPI_AddCharDescriptor[9] = NPI_AddCharDescriptor[11] = 0; // string length
+  SetFCS(NPI_AddCharDescriptor4);  // FCS
+  msg = NPI_AddCharDescriptor4;
 }
   
 //*************Lab6_AddNotifyCharacteristic**************
@@ -293,8 +390,24 @@ void BuildSetDeviceNameMsg(char name[], uint8_t *msg){
 // for a hint see NPI_GATTSetDeviceNameMsg in VerySimpleApplicationProcessor.c
 // for a hint see NPI_GATTSetDeviceName in AP.c
 //****You implement this function as part of Lab 6*****
-  
-  
+  uint8_t NPI_GATTSetDeviceNameMsg[] = {   
+  SOF,18,0x00,    // length = 18
+  0x35,0x8C,      // SNP Set GATT Parameter (0x8C)
+  0x01,           // Generic Access Service
+  0x00,0x00,      // Device Name
+  'S','h','a','p','e',' ','t','h','e',' ','W','o','r','l','d',
+  0x00};          // FCS
+  uint8_t i = 0;
+  while((i<24)&&(name[i]))
+  {
+    NPI_GATTSetDeviceNameMsg[7+i] = name[i]; 
+    i++;
+  }
+  NPI_GATTSetDeviceNameMsg[8+i] = 0; 
+  i++;
+  NPI_GATTSetDeviceNameMsg[1] = 3+i;  // frame length
+  SetFCS(NPI_GATTSetDeviceNameMsg);
+  msg = NPI_GATTSetDeviceNameMsg;
 }
 //*************BuildSetAdvertisementData1Msg**************
 // Create a Set Advertisement Data message, used in Lab 6
