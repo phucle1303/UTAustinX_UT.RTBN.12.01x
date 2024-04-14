@@ -89,7 +89,11 @@ void BuildGetStatusMsg(uint8_t *msg){
 //****You implement this function as part of Lab 6*****
   uint8_t NPI_GetStatus[6] =   {SOF,0x00,0x00,0x55,0x06,0x00};
   SetFCS(NPI_GetStatus);
-  msg = NPI_GetStatus;
+  for (uint8_t i=0; i<6; i++)
+  {
+    *msg = NPI_GetStatus[i];
+    msg++;
+  }
 }
 //*************Lab6_GetStatus**************
 // Get status of connection, used in Lab 6
@@ -116,7 +120,11 @@ void BuildGetVersionMsg(uint8_t *msg){
 //****You implement this function as part of Lab 6*****
   uint8_t NPI_GetVersion[6] =  {SOF,0x00,0x00,0x35,0x03,0x00};
   SetFCS(NPI_GetVersion);
-  msg = NPI_GetVersion;
+  for (uint8_t i=0; i<6; i++)
+  {
+    *msg = NPI_GetVersion[i];
+    msg++;
+  }
 }
 //*************Lab6_GetVersion**************
 // Get version of the SNP application running on the CC2650, used in Lab 6
@@ -137,7 +145,7 @@ uint32_t Lab6_GetVersion(void){volatile int r;uint8_t sendMsg[8];
 // build the necessary NPI message that will add a service
 void BuildAddServiceMsg(uint16_t uuid, uint8_t *msg){
 //****You implement this function as part of Lab 6*****
-  uint8_t NPI_AddService[8] = 
+  uint8_t NPI_AddService[9] = 
   {
   SOF,3,0x00,     // length = 3
   0x35,0x81,      // SNP Add Service
@@ -148,7 +156,11 @@ void BuildAddServiceMsg(uint16_t uuid, uint8_t *msg){
   NPI_AddService[6] = uuid&0xFF;
   NPI_AddService[7] = uuid>>8;
   SetFCS(NPI_AddService);
-  msg = NPI_AddService;
+  for (uint8_t i=0; i<9; i++)
+  {
+    *msg = NPI_AddService[i];
+    msg++;
+  }
 }
 //*************Lab6_AddService**************
 // Add a service, used in Lab 6
@@ -168,14 +180,18 @@ int Lab6_AddService(uint16_t uuid){ int r; uint8_t sendMsg[12];
 // build the necessary NPI message that will register a service
 void BuildRegisterServiceMsg(uint8_t *msg){
 //****You implement this function as part of Lab 6*****
-  uint8_t NPI_Register[5] = 
+  uint8_t NPI_Register[6] = 
   {   
   SOF,0x00,0x00,  // length = 0
   0x35,0x84,      // SNP Register Service
   0x00            // FCS
   };
   SetFCS(NPI_Register);
-  msg = NPI_Register;
+  for (uint8_t i=0; i<6; i++)
+  {
+    *msg = NPI_Register[i];
+    msg++;
+  }
 }
 //*************Lab6_RegisterService**************
 // Register a service, used in Lab 6
@@ -220,7 +236,11 @@ void BuildAddCharValueMsg(uint16_t uuid,
   NPI_AddCharValue[11] = 0xFF&uuid; //uuid
   NPI_AddCharValue[12] = uuid>>8;   //uuid
   SetFCS(NPI_AddCharValue);  //FCS
-  msg = NPI_AddCharValue;
+  for (uint8_t i=0; i<14; i++)
+  {
+    *msg = NPI_AddCharValue[i];
+    msg++;
+  }
 }
 
 //*************BuildAddCharDescriptorMsg**************
@@ -259,7 +279,11 @@ void BuildAddCharDescriptorMsg(char name[], uint8_t *msg){
   NPI_AddCharDescriptor[7] = NPI_AddCharDescriptor[9] = i;  // string length
   NPI_AddCharDescriptor[8] = NPI_AddCharDescriptor[10] = 0; // string length
   SetFCS(NPI_AddCharDescriptor);  // FCS
-  msg = NPI_AddCharDescriptor;
+  for (uint8_t i=0; i<32; i++)
+  {
+    *msg = NPI_AddCharDescriptor[i];
+    msg++;
+  }
 }
 
 //*************Lab6_AddCharacteristic**************
@@ -338,10 +362,14 @@ void BuildAddNotifyCharDescriptorMsg(char name[], uint8_t *msg){
   NPI_AddCharDescriptor4[5] = 0x84; // User Description String
   NPI_AddCharDescriptor4[6] = 0x03, // CCCD parameters read+write
   NPI_AddCharDescriptor4[7] = 0x01; // GATT Read Permissions
-  NPI_AddCharDescriptor[8] = NPI_AddCharDescriptor[10] = i;  // string length
-  NPI_AddCharDescriptor[9] = NPI_AddCharDescriptor[11] = 0; // string length
+  NPI_AddCharDescriptor4[8] = NPI_AddCharDescriptor4[10] = i;  // string length
+  NPI_AddCharDescriptor4[9] = NPI_AddCharDescriptor4[11] = 0; // string length
   SetFCS(NPI_AddCharDescriptor4);  // FCS
-  msg = NPI_AddCharDescriptor4;
+  for (uint8_t i=0; i<(i+(NPI_AddCharDescriptor4[1]-i)+5); i++)
+  {
+    *msg = NPI_AddCharDescriptor4[i];
+    msg++;
+  }
 }
   
 //*************Lab6_AddNotifyCharacteristic**************
@@ -400,14 +428,16 @@ void BuildSetDeviceNameMsg(char name[], uint8_t *msg){
   uint8_t i = 0;
   while((i<24)&&(name[i]))
   {
-    NPI_GATTSetDeviceNameMsg[7+i] = name[i]; 
+    NPI_GATTSetDeviceNameMsg[8+i] = name[i]; 
     i++;
   }
-  NPI_GATTSetDeviceNameMsg[8+i] = 0; 
-  i++;
   NPI_GATTSetDeviceNameMsg[1] = 3+i;  // frame length
   SetFCS(NPI_GATTSetDeviceNameMsg);
-  msg = NPI_GATTSetDeviceNameMsg;
+  for (uint8_t i=0; i<36; i++)
+  {
+    *msg = NPI_GATTSetDeviceNameMsg[i];
+    msg++;
+  }
 }
 //*************BuildSetAdvertisementData1Msg**************
 // Create a Set Advertisement Data message, used in Lab 6
@@ -424,7 +454,23 @@ void BuildSetAdvertisementData1Msg(uint8_t *msg){
 // TI_ST_KEY_DATA_ID
 // Key state=0
 //****You implement this function as part of Lab 6*****
-  
+  uint8_t NPI_SetAdvertisementMsg[] = {   
+  SOF,11,0x00,    // length = 11
+  0x55,0x43,      // SNP Set Advertisement Data
+  0x01,           // Not connected Advertisement Data
+  0x02,0x01,0x06, // GAP_ADTYPE_FLAGS,DISCOVERABLE | no BREDR
+  0x06,0xFF,      // length, manufacturer specific
+  0x0D ,0x00,     // Texas Instruments Company ID
+  0x03,           // TI_ST_DEVICE_ID
+  0x00,           // TI_ST_KEY_DATA_ID
+  0x00,           // Key state
+  0x00};          // FCS
+  SetFCS(NPI_SetAdvertisementMsg);
+  for (uint8_t i=0; i<16; i++)
+  {
+    *msg = NPI_SetAdvertisementMsg[i];
+    msg++;
+  }
   
 }
 
@@ -438,8 +484,36 @@ void BuildSetAdvertisementDataMsg(char name[], uint8_t *msg){
 // for a hint see NPI_SetAdvertisementDataMsg in VerySimpleApplicationProcessor.c
 // for a hint see NPI_SetAdvertisementData in AP.c
 //****You implement this function as part of Lab 6*****
-  
-  
+  uint8_t NPI_SetAdvertisementDataMsg[] = {   
+  SOF,27,0x00,    // length = 27
+  0x55,0x43,      // SNP Set Advertisement Data
+  0x00,           // Scan Response Data
+  16,0x09,        // length, type=LOCAL_NAME_COMPLETE
+  'S','h','a','p','e',' ','t','h','e',' ','W','o','r','l','d',
+// connection interval range
+  0x05,           // length of this data
+  0x12,           // GAP_ADTYPE_SLAVE_CONN_INTERVAL_RANGE
+  0x50,0x00,      // DEFAULT_DESIRED_MIN_CONN_INTERVAL
+  0x20,0x03,      // DEFAULT_DESIRED_MAX_CONN_INTERVAL
+// Tx power level
+  0x02,           // length of this data
+  0x0A,           // GAP_ADTYPE_POWER_LEVEL
+  0x00,           // 0dBm
+  0x00};          // FCS 
+  uint8_t i = 0;
+  while((i<24)&&(name[i]))
+  {
+    NPI_SetAdvertisementDataMsg[8+i] = name[i]; 
+    i++;
+  }
+  NPI_SetAdvertisementDataMsg[1] = 12 + i;  // frame length
+  NPI_SetAdvertisementDataMsg[6] = i + 1;  // length of data message
+  SetFCS(NPI_SetAdvertisementDataMsg);
+  for (uint8_t i=0; i<36; i++)
+  {
+    *msg = NPI_SetAdvertisementDataMsg[i];
+    msg++;
+  }
 }
 //*************BuildStartAdvertisementMsg**************
 // Create a Start Advertisement Data message, used in Lab 6
@@ -451,8 +525,25 @@ void BuildStartAdvertisementMsg(uint16_t interval, uint8_t *msg){
 // for a hint see NPI_StartAdvertisementMsg in VerySimpleApplicationProcessor.c
 // for a hint see NPI_StartAdvertisement in AP.c
 //****You implement this function as part of Lab 6*****
-  
-  
+  uint8_t NPI_StartAdvertisementMsg[] = {   
+  SOF,14,0x00,    // length = 14
+  0x55,0x42,      // SNP Start Advertisement
+  0x00,           // Connectable Undirected Advertisements
+  0x00,0x00,      // Advertise infinitely.
+  0x64,0x00,      // Advertising Interval (100 * 0.625 ms=62.5ms)
+  0x00,           // Filter Policy RFU
+  0x00,           // Initiator Address Type RFU
+  0x00,0x01,0x00,0x00,0x00,0xC5, // RFU
+  0x02,           // Advertising will restart with connectable advertising when a connection is terminated
+  0x00};          // FCS
+  NPI_StartAdvertisementMsg[8] = interval&0xFF;
+  NPI_StartAdvertisementMsg[9] = interval>>8;
+  SetFCS(NPI_StartAdvertisementMsg);
+  for (uint8_t i=0; i<20; i++)
+  {
+    *msg = NPI_StartAdvertisementMsg[i];
+    msg++;
+  }
 }
 
 //*************Lab6_StartAdvertisement**************
