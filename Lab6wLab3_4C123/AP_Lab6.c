@@ -156,9 +156,9 @@ void BuildAddServiceMsg(uint16_t uuid, uint8_t *msg){
   NPI_AddService[6] = uuid&0xFF;
   NPI_AddService[7] = uuid>>8;
   SetFCS(NPI_AddService);
-  for (uint8_t i=0; i<9; i++)
+  for (uint8_t j=0; j<9; j++)
   {
-    *msg = NPI_AddService[i];
+    *msg = NPI_AddService[j];
     msg++;
   }
 }
@@ -187,9 +187,9 @@ void BuildRegisterServiceMsg(uint8_t *msg){
   0x00            // FCS
   };
   SetFCS(NPI_Register);
-  for (uint8_t i=0; i<6; i++)
+  for (uint8_t j=0; j<6; j++)
   {
-    *msg = NPI_Register[i];
+    *msg = NPI_Register[j];
     msg++;
   }
 }
@@ -236,9 +236,9 @@ void BuildAddCharValueMsg(uint16_t uuid,
   NPI_AddCharValue[11] = 0xFF&uuid; //uuid
   NPI_AddCharValue[12] = uuid>>8;   //uuid
   SetFCS(NPI_AddCharValue);  //FCS
-  for (uint8_t i=0; i<14; i++)
+  for (uint8_t j=0; j<14; j++)
   {
-    *msg = NPI_AddCharValue[i];
+    *msg = NPI_AddCharValue[j];
     msg++;
   }
 }
@@ -279,9 +279,9 @@ void BuildAddCharDescriptorMsg(char name[], uint8_t *msg){
   NPI_AddCharDescriptor[7] = NPI_AddCharDescriptor[9] = i;  // string length
   NPI_AddCharDescriptor[8] = NPI_AddCharDescriptor[10] = 0; // string length
   SetFCS(NPI_AddCharDescriptor);  // FCS
-  for (uint8_t i=0; i<32; i++)
+  for (uint8_t j=0; j<32; j++)
   {
-    *msg = NPI_AddCharDescriptor[i];
+    *msg = NPI_AddCharDescriptor[j];
     msg++;
   }
 }
@@ -365,9 +365,9 @@ void BuildAddNotifyCharDescriptorMsg(char name[], uint8_t *msg){
   NPI_AddCharDescriptor4[8] = NPI_AddCharDescriptor4[10] = i;  // string length
   NPI_AddCharDescriptor4[9] = NPI_AddCharDescriptor4[11] = 0; // string length
   SetFCS(NPI_AddCharDescriptor4);  // FCS
-  for (uint8_t i=0; i<(i+(NPI_AddCharDescriptor4[1]-i)+5); i++)
+  for (uint8_t j=0; j<(NPI_AddCharDescriptor4[1]+6); j++)
   {
-    *msg = NPI_AddCharDescriptor4[i];
+    *msg = NPI_AddCharDescriptor4[j];
     msg++;
   }
 }
@@ -418,24 +418,31 @@ void BuildSetDeviceNameMsg(char name[], uint8_t *msg){
 // for a hint see NPI_GATTSetDeviceNameMsg in VerySimpleApplicationProcessor.c
 // for a hint see NPI_GATTSetDeviceName in AP.c
 //****You implement this function as part of Lab 6*****
-  uint8_t NPI_GATTSetDeviceNameMsg[] = {   
-  SOF,18,0x00,    // length = 18
-  0x35,0x8C,      // SNP Set GATT Parameter (0x8C)
-  0x01,           // Generic Access Service
-  0x00,0x00,      // Device Name
-  'S','h','a','p','e',' ','t','h','e',' ','W','o','r','l','d',
-  0x00};          // FCS
+  uint8_t NPI_GATTSetDeviceNameMsg[36] = {0};   
+  // SOF,18,0x00,    // length = 18
+  // 0x35,0x8C,      // SNP Set GATT Parameter (0x8C)
+  // 0x01,           // Generic Access Service
+  // 0x00,0x00,      // Device Name
+  // 'S','h','a','p','e',' ','t','h','e',' ','W','o','r','l','d',
+  // 0x00};          // FCS
   uint8_t i = 0;
   while((i<24)&&(name[i]))
   {
     NPI_GATTSetDeviceNameMsg[8+i] = name[i]; 
     i++;
   }
-  NPI_GATTSetDeviceNameMsg[1] = 3+i;  // frame length
+  NPI_GATTSetDeviceNameMsg[0] = SOF;
+  NPI_GATTSetDeviceNameMsg[1] = 3 + i;   // frame length
+  NPI_GATTSetDeviceNameMsg[2] = 0x00;    // frame length
+  NPI_GATTSetDeviceNameMsg[3] = 0x35;    // SNP Set GATT Parameter (0x8C)
+  NPI_GATTSetDeviceNameMsg[4] = 0x8C;    // SNP Set GATT Parameter (0x8C)
+  NPI_GATTSetDeviceNameMsg[5] = 0x01;    // Generic Access Service
+  NPI_GATTSetDeviceNameMsg[6] = 0x00;    // GDevice Name
+  NPI_GATTSetDeviceNameMsg[7] = 0x00;    // Device Name
   SetFCS(NPI_GATTSetDeviceNameMsg);
-  for (uint8_t i=0; i<36; i++)
+  for (uint8_t j=0; j<36; j++)
   {
-    *msg = NPI_GATTSetDeviceNameMsg[i];
+    *msg = NPI_GATTSetDeviceNameMsg[j];
     msg++;
   }
 }
@@ -460,15 +467,15 @@ void BuildSetAdvertisementData1Msg(uint8_t *msg){
   0x01,           // Not connected Advertisement Data
   0x02,0x01,0x06, // GAP_ADTYPE_FLAGS,DISCOVERABLE | no BREDR
   0x06,0xFF,      // length, manufacturer specific
-  0x0D ,0x00,     // Texas Instruments Company ID
+  0x0D,0x00,     // Texas Instruments Company ID
   0x03,           // TI_ST_DEVICE_ID
   0x00,           // TI_ST_KEY_DATA_ID
   0x00,           // Key state
   0x00};          // FCS
   SetFCS(NPI_SetAdvertisementMsg);
-  for (uint8_t i=0; i<16; i++)
+  for (uint8_t j=0; j<17; j++)
   {
-    *msg = NPI_SetAdvertisementMsg[i];
+    *msg = NPI_SetAdvertisementMsg[j];
     msg++;
   }
   
@@ -484,34 +491,49 @@ void BuildSetAdvertisementDataMsg(char name[], uint8_t *msg){
 // for a hint see NPI_SetAdvertisementDataMsg in VerySimpleApplicationProcessor.c
 // for a hint see NPI_SetAdvertisementData in AP.c
 //****You implement this function as part of Lab 6*****
-  uint8_t NPI_SetAdvertisementDataMsg[] = {   
-  SOF,27,0x00,    // length = 27
-  0x55,0x43,      // SNP Set Advertisement Data
-  0x00,           // Scan Response Data
-  16,0x09,        // length, type=LOCAL_NAME_COMPLETE
-  'S','h','a','p','e',' ','t','h','e',' ','W','o','r','l','d',
-// connection interval range
-  0x05,           // length of this data
-  0x12,           // GAP_ADTYPE_SLAVE_CONN_INTERVAL_RANGE
-  0x50,0x00,      // DEFAULT_DESIRED_MIN_CONN_INTERVAL
-  0x20,0x03,      // DEFAULT_DESIRED_MAX_CONN_INTERVAL
-// Tx power level
-  0x02,           // length of this data
-  0x0A,           // GAP_ADTYPE_POWER_LEVEL
-  0x00,           // 0dBm
-  0x00};          // FCS 
+  uint8_t NPI_SetAdvertisementDataMsg[36] = {0};
+//   SOF,24,0x00,    // length = 24
+//   0x55,0x43,      // SNP Set Advertisement Data
+//   0x00,           // Scan Response Data
+//   2,0x09,        // length, type=LOCAL_NAME_COMPLETE
+//   ' ',
+// // connection interval range
+//   0x05,           // length of this data
+//   0x12,           // GAP_ADTYPE_SLAVE_CONN_INTERVAL_RANGE
+//   0x50,0x00,      // DEFAULT_DESIRED_MIN_CONN_INTERVAL
+//   0x20,0x03,      // DEFAULT_DESIRED_MAX_CONN_INTERVAL
+// // Tx power level
+//   0x02,           // length of this data
+//   0x0A,           // GAP_ADTYPE_POWER_LEVEL
+//   0x00,           // 0dBm
+//   0x00            // FCS 
   uint8_t i = 0;
   while((i<24)&&(name[i]))
   {
     NPI_SetAdvertisementDataMsg[8+i] = name[i]; 
     i++;
   }
+  NPI_SetAdvertisementDataMsg[0] = SOF;
   NPI_SetAdvertisementDataMsg[1] = 12 + i;  // frame length
-  NPI_SetAdvertisementDataMsg[6] = i + 1;  // length of data message
+  NPI_SetAdvertisementDataMsg[2] = 0x00;    // frame length
+  NPI_SetAdvertisementDataMsg[3] = 0x55;    // SNP Set Advertisement Data
+  NPI_SetAdvertisementDataMsg[4] = 0x43;    // SNP Set Advertisement Data
+  NPI_SetAdvertisementDataMsg[5] = 0x00;    // Scan Response Data
+  NPI_SetAdvertisementDataMsg[6] = i + 1;   // length of data message
+  NPI_SetAdvertisementDataMsg[7] = 0x09;    // type=LOCAL_NAME_COMPLETE
+  NPI_SetAdvertisementDataMsg[7+i+1] = 0x05,    // length of this data
+  NPI_SetAdvertisementDataMsg[7+i+2] = 0x12,  // GAP_ADTYPE_SLAVE_CONN_INTERVAL_RANGE
+  NPI_SetAdvertisementDataMsg[7+i+3] = 0x50,  // DEFAULT_DESIRED_MIN_CONN_INTERVAL
+  NPI_SetAdvertisementDataMsg[7+i+4] = 0x00,  // DEFAULT_DESIRED_MIN_CONN_INTERVAL
+  NPI_SetAdvertisementDataMsg[7+i+5] = 0x20,  // DEFAULT_DESIRED_MAX_CONN_INTERVAL
+  NPI_SetAdvertisementDataMsg[7+i+6] = 0x03,  // DEFAULT_DESIRED_MAX_CONN_INTERVAL
+  NPI_SetAdvertisementDataMsg[7+i+7] = 0x02,  // length of this data
+  NPI_SetAdvertisementDataMsg[7+i+8] = 0x0A,  // GAP_ADTYPE_POWER_LEVEL
+  NPI_SetAdvertisementDataMsg[7+i+9] = 0x00,  // 0dBm
   SetFCS(NPI_SetAdvertisementDataMsg);
-  for (uint8_t i=0; i<36; i++)
+  for (uint8_t j=0; j<36; j++)
   {
-    *msg = NPI_SetAdvertisementDataMsg[i];
+    *msg = NPI_SetAdvertisementDataMsg[j];
     msg++;
   }
 }
@@ -539,9 +561,9 @@ void BuildStartAdvertisementMsg(uint16_t interval, uint8_t *msg){
   NPI_StartAdvertisementMsg[8] = interval&0xFF;
   NPI_StartAdvertisementMsg[9] = interval>>8;
   SetFCS(NPI_StartAdvertisementMsg);
-  for (uint8_t i=0; i<20; i++)
+  for (uint8_t j=0; j<20; j++)
   {
-    *msg = NPI_StartAdvertisementMsg[i];
+    *msg = NPI_StartAdvertisementMsg[j];
     msg++;
   }
 }
